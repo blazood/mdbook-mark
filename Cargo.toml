@@ -5,6 +5,7 @@ authors = ["blazh <blazh@163.com>"]
 edition = "2018"
 keywords = ["mdbook", "gitbook", "rustbook", "markdown", "mark"]
 readme = "README.md"
+license = "MPL-2.0"
 repository = "https://github.com/blazood/mdbook-mark"
 description = "this is a mdbook preprocessor which can render ==== to <mark></mark>"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
