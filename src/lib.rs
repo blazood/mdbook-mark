@@ -1,4 +1,4 @@
-use log::info;
+use log::debug;
 use mdbook::preprocess::{Preprocessor, PreprocessorContext, CmdPreprocessor};
 use mdbook::book::Book;
 use mdbook::errors::Error;
@@ -11,26 +11,30 @@ use regex::Regex;
 extern crate lazy_static;
 
 lazy_static! {
- static ref RE : Regex= Regex::new(r"==(?P<c>\S+?)==").unwrap();
+    /// if you use mermaid, may be use `Flow1 ==description==> Flow2`, this string will ignore
+    static ref RE : Regex= Regex::new(r"==(?P<c>\S+?)==[^>]").unwrap();
+}
+
+pub fn replace_all(s: &str) -> String {
+    RE.replace_all(s, "<mark>$c</mark>").into_owned()
+}
+
+pub fn handle_each_item(book_item: &mut BookItem) {
+    match book_item {
+        BookItem::Chapter(chapter) => {
+            chapter.content = replace_all(&chapter.content);
+            for item in &mut chapter.sub_items {
+                handle_each_item(item);
+            }
+        }
+        _ => {}
+    }
 }
 
 pub struct MarkPreprocessor {}
 
-impl MarkPreprocessor {
-    pub fn handle_each_item(book_item: &mut BookItem) {
-        match book_item {
-            BookItem::Chapter(chapter) => {
-                chapter.content = RE.replace_all(&chapter.content, "<mark>$c</mark>").into_owned();
-                for item in &mut chapter.sub_items {
-                    MarkPreprocessor::handle_each_item(item);
-                }
-            }
-            _ => {}
-        }
-    }
-}
-
 impl Preprocessor for MarkPreprocessor {
+
     fn name(&self) -> &str {
         "mark"
     }
@@ -38,7 +42,7 @@ impl Preprocessor for MarkPreprocessor {
     fn run(&self, _: &PreprocessorContext, mut book: Book) -> Result<Book, Error> {
         let ii = &mut book.sections;
         for section in ii {
-            MarkPreprocessor::handle_each_item(section);
+            handle_each_item(section);
         }
         Ok(book)
     }
@@ -49,7 +53,7 @@ impl Preprocessor for MarkPreprocessor {
 }
 
 pub fn handle_preprocessor(pre: &dyn Preprocessor) -> Result<(), Error> {
-    info!("mark start");
+    debug!("mark start");
     let (ctx, book) = CmdPreprocessor::parse_input(io::stdin())?;
 
     if ctx.mdbook_version != mdbook::MDBOOK_VERSION {
