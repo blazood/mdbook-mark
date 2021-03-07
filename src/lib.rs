@@ -15,6 +15,7 @@ lazy_static! {
     static ref RE : Regex= Regex::new(r"==(?P<c>\S+?)==[^>]").unwrap();
 }
 
+
 pub fn replace_all(s: &str) -> String {
     RE.replace_all(s, "<mark>$c</mark>").into_owned()
 }
